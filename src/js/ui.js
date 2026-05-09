@@ -61,7 +61,7 @@ export function showScreen(screenName) {
         } else {
             elements.hud.classList.remove('hidden');
             elements.spectatorBanner.classList.add('hidden');
-            elements.canvas.style.cursor = 'crosshair';
+            elements.canvas.style.cursor = "url('src/assets/crosshair.svg') 16 16, crosshair";
         }
     } else {
         if (elements.sidebar) elements.sidebar.classList.add('sidebar-hidden');

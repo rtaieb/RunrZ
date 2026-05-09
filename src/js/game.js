@@ -34,6 +34,12 @@ export function startGame(roomData) {
     state.hasShot = false;
     elements.ammoCount.innerText = "1";
     elements.ammoCount.className = "text-red-400 font-extrabold text-2xl ml-1";
+    
+    if (!state.isSpectator) {
+        elements.canvas.style.cursor = `url('src/assets/crosshair.svg') 16 16, crosshair`;
+    } else {
+        elements.canvas.style.cursor = 'default';
+    }
 
     state.gameState = 'playing';
     showScreen(null); 
@@ -50,6 +56,7 @@ export function updateRemotePlayers(roomData) {
             const runner = state.runners.find(r => r.uid === uid);
             if (runner) {
                 runner.isMoving = pData.isMoving;
+                runner.isSprinting = pData.isSprinting;
                 if (Math.abs(runner.x - pData.x) > 20) {
                     runner.x = pData.x;
                 }
@@ -178,6 +185,19 @@ export function setLocalMovement(isMoving) {
         localRunner.isMoving = isMoving;
         updateDoc(state.currentRoomRef, {
             [`players.${state.currentUser.uid}.isMoving`]: isMoving,
+            [`players.${state.currentUser.uid}.x`]: localRunner.x
+        }).catch(console.error);
+    }
+}
+
+export function setLocalSprinting(isSprinting) {
+    if (state.gameState !== 'playing' || !state.currentRoomRef || state.isSpectator) return;
+    
+    const localRunner = state.runners.find(r => r.isLocal);
+    if (localRunner && !localRunner.isDead && localRunner.isSprinting !== isSprinting) {
+        localRunner.isSprinting = isSprinting;
+        updateDoc(state.currentRoomRef, {
+            [`players.${state.currentUser.uid}.isSprinting`]: isSprinting,
             [`players.${state.currentUser.uid}.x`]: localRunner.x
         }).catch(console.error);
     }

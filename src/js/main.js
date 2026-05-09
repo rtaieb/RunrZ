@@ -1,7 +1,7 @@
 import { state } from './state.js';
 import { elements, showScreen, showError } from './ui.js';
 import { joinPublicRoom, createRoom, joinRoom, hostStartGame, returnToLobby } from './network.js';
-import { setLocalMovement, attemptShoot, draw } from './game.js';
+import { setLocalMovement, setLocalSprinting, attemptShoot, draw } from './game.js';
 import { RUNNER_RADIUS } from './config.js';
 
 const savedName = localStorage.getItem('runrz_player_name');
@@ -19,12 +19,23 @@ window.addEventListener('keydown', (e) => {
         }
         if (e.target === document.body) e.preventDefault(); 
     }
+    if (e.code === 'KeyR' || e.key === 'r' || e.key === 'R') {
+        const localRunner = state.runners.find(r => r.isLocal);
+        if (!state.isRPressed && localRunner && !localRunner.isDead) {
+            state.isRPressed = true;
+            setLocalSprinting(true);
+        }
+    }
 });
 
 window.addEventListener('keyup', (e) => {
     if (e.code === 'Space') {
         state.isSpacePressed = false;
         setLocalMovement(false);
+    }
+    if (e.code === 'KeyR' || e.key === 'r' || e.key === 'R') {
+        state.isRPressed = false;
+        setLocalSprinting(false);
     }
 });
 

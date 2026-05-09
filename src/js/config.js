@@ -12,7 +12,7 @@ export const firebaseConfig = {
 export const NUM_RUNNERS = 15;
 export const RUNNER_RADIUS = 8;
 export const FINISH_LINE_OFFSET = 100;
-export const BASE_SPEED = 30; 
+export const BASE_SPEED = 50; 
 export const TIME_STEP = 1 / 60; // Simulation à 60 FPS constants pour le déterminisme
 export const MAX_HUMANS = 6;
 

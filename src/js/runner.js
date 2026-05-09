@@ -48,6 +48,7 @@ export class Runner {
         this.speed = BASE_SPEED + randomRange(-8, 8); 
         
         this.isMoving = false; 
+        this.isSprinting = false;
         this.isDead = false; 
         this.stateTimer = randomRange(NPC_MIN_PAUSE_TIME, NPC_MAX_PAUSE_TIME); 
         this.spriteIndex = this.lane % 6;
@@ -77,7 +78,11 @@ export class Runner {
         }
 
         if (this.isMoving) {
-            this.x += this.speed * dt;
+            let currentSpeed = this.speed;
+            if (this.isSprinting) {
+                currentSpeed *= 1.5;
+            }
+            this.x += currentSpeed * dt;
         }
     }
 
