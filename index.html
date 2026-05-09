@@ -74,19 +74,40 @@
         <button id="btn-leave" class="btn bg-red-600 hover:bg-red-700">Quitter le salon</button>
     </div>
 
-    <!-- HUD En Jeu -->
-    <div id="hud" class="hidden absolute top-4 left-4 bg-gray-900 bg-opacity-80 p-3 rounded border border-gray-700 shadow-lg pointer-events-none z-20">
-        <span class="text-gray-300 font-bold">Balle(s) : </span>
-        <span id="ammo-count" class="text-red-400 font-extrabold text-2xl ml-1">1</span>
+    <!-- Zone de Jeu (Canvas + Sidebar) -->
+    <div id="canvas-wrapper" class="relative w-full" style="max-width: 1000px; aspect-ratio: 1000/600;">
+        <!-- HUD En Jeu -->
+        <div id="hud" class="hidden absolute top-4 left-4 bg-gray-900 bg-opacity-80 p-3 rounded border border-gray-700 shadow-lg pointer-events-none z-20">
+            <span class="text-gray-300 font-bold">Balle(s) : </span>
+            <span id="ammo-count" class="text-red-400 font-extrabold text-2xl ml-1">1</span>
+        </div>
+
+        <!-- Bannière Mode Spectateur -->
+        <div id="spectator-banner" class="hidden absolute top-4 left-1/2 transform -translate-x-1/2 bg-purple-600 bg-opacity-90 px-6 py-2 rounded-full border border-purple-400 shadow-lg pointer-events-none z-20">
+            <span class="text-white font-bold tracking-wide">👀 MODE SPECTATEUR</span>
+        </div>
+
+        <!-- Le Jeu (Canvas) -->
+        <canvas id="gameCanvas" width="1000" height="600" class="w-full h-full bg-gray-800 rounded-xl shadow-2xl border border-gray-700"></canvas>
     </div>
 
-    <!-- Bannière Mode Spectateur -->
-    <div id="spectator-banner" class="hidden absolute top-4 left-1/2 transform -translate-x-1/2 bg-purple-600 bg-opacity-90 px-6 py-2 rounded-full border border-purple-400 shadow-lg pointer-events-none z-20">
-        <span class="text-white font-bold tracking-wide">👀 MODE SPECTATEUR</span>
-    </div>
+    <!-- Panneau Latéral (Sidebar) -->
+    <div id="game-sidebar" class="sidebar-hidden w-full md:w-64 bg-gray-800 bg-opacity-90 rounded-xl border border-gray-700 shadow-xl p-4 flex flex-col gap-4">
+        <!-- Room Code -->
+        <div id="sidebar-code-container" class="bg-gray-900 p-3 rounded-lg text-center cursor-pointer relative group border border-gray-600" onclick="copyRoomCode()">
+            <p class="text-gray-400 text-xs uppercase font-bold mb-1">Code du salon</p>
+            <p id="sidebar-code" class="text-2xl font-mono text-blue-400 tracking-widest font-bold">-----</p>
+            <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-green-500 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Cliquer pour copier</span>
+        </div>
 
-    <!-- Le Jeu (Canvas) -->
-    <canvas id="gameCanvas"></canvas>
+        <!-- Player List -->
+        <div class="flex-grow">
+            <h3 class="text-gray-400 text-sm uppercase font-bold mb-2 border-b border-gray-600 pb-1">Joueurs</h3>
+            <ul id="sidebar-player-list" class="space-y-2">
+                <!-- Rempli en JS -->
+            </ul>
+        </div>
+    </div>
 </div>
 
 <script type="module" src="src/js/main.js"></script>

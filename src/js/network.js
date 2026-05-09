@@ -14,7 +14,10 @@ export const db = getFirestore(app);
 
 export function getPlayerName() {
     const val = elements.inputPlayerName.value.trim();
-    if (val) return val;
+    if (val) {
+        localStorage.setItem('runrz_player_name', val);
+        return val;
+    }
     return "Coureur " + Math.floor(Math.random() * 10000);
 }
 
@@ -174,6 +177,43 @@ export async function joinRoom() {
     }
 }
 
+function updateSidebar(data, roomId) {
+    if (elements.sidebarCode) {
+        elements.sidebarCode.innerText = data.isPrivate ? roomId : "PUBLIC";
+    }
+    if (elements.sidebarPlayerList && data.players) {
+        elements.sidebarPlayerList.innerHTML = '';
+        
+        // Convertir l'objet players en tableau et le trier par ordre alphabétique du pseudo
+        const sortedPlayers = Object.entries(data.players).sort((a, b) => {
+            return a[1].name.localeCompare(b[1].name);
+        });
+
+        sortedPlayers.forEach(([uid, pData]) => {
+            const isLocal = uid === state.currentUser?.uid;
+            const isDead = data.deadRunners && data.deadRunners[pData.lane];
+            const isSpectator = pData.isSpectator;
+            
+            const li = document.createElement('li');
+            li.className = `flex items-center justify-between p-2 rounded ${isLocal ? 'bg-gray-700 border border-gray-600' : 'bg-gray-800'}`;
+            
+            let statusIcon = '🟢';
+            if (isSpectator) statusIcon = '👀';
+            else if (isDead) statusIcon = '💀';
+            
+            li.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span>${statusIcon}</span>
+                    <span class="${isLocal ? 'font-bold text-white' : 'text-gray-300'} ${isDead ? 'line-through text-red-400' : ''}">
+                        ${pData.name} ${isLocal ? '(Toi)' : ''}
+                    </span>
+                </div>
+            `;
+            elements.sidebarPlayerList.appendChild(li);
+        });
+    }
+}
+
 export function listenToRoom(roomId) {
     state.currentRoomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
     state.gameState = 'lobby';
@@ -183,6 +223,8 @@ export function listenToRoom(roomId) {
     state.unsubRoom = onSnapshot(state.currentRoomRef, (docSnap) => {
         if (!docSnap.exists()) return;
         const data = docSnap.data();
+        
+        updateSidebar(data, roomId);
         
         if (data.status === 'waiting') {
             state.gameState = 'lobby';

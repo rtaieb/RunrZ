@@ -4,6 +4,11 @@ import { joinPublicRoom, createRoom, joinRoom, hostStartGame, returnToLobby } fr
 import { setLocalMovement, attemptShoot, draw } from './game.js';
 import { RUNNER_RADIUS } from './config.js';
 
+const savedName = localStorage.getItem('runrz_player_name');
+if (savedName) {
+    elements.inputPlayerName.value = savedName;
+}
+
 // --- GESTION DES ENTREES ---
 window.addEventListener('keydown', (e) => {
     if (e.code === 'Space') {
@@ -23,22 +28,34 @@ window.addEventListener('keyup', (e) => {
     }
 });
 
+function getCanvasPos(e) {
+    const rect = elements.canvas.getBoundingClientRect();
+    const scaleX = elements.canvas.width / rect.width;
+    const scaleY = elements.canvas.height / rect.height;
+    return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+    };
+}
+
 elements.canvas.addEventListener('mousedown', (e) => {
-    attemptShoot(e.clientX, e.clientY);
+    const pos = getCanvasPos(e);
+    attemptShoot(pos.x, pos.y);
 });
 
 elements.canvas.addEventListener('touchstart', (e) => {
     e.preventDefault(); 
     
     const touch = e.touches[0];
+    const pos = getCanvasPos(touch);
     let isShotAttempt = false;
 
     if (state.gameState === 'playing' && !state.hasShot) {
         const localRunner = state.runners.find(r => r.isLocal);
         if (localRunner && !localRunner.isDead) {
             for (const r of state.runners) {
-                if (!r.isDead && Math.hypot(r.x - touch.clientX, r.y - touch.clientY) <= RUNNER_RADIUS * 3) {
-                    attemptShoot(touch.clientX, touch.clientY);
+                if (!r.isDead && Math.hypot(r.x - pos.x, r.y - pos.y) <= RUNNER_RADIUS * 3) {
+                    attemptShoot(pos.x, pos.y);
                     isShotAttempt = true;
                     break;
                 }
@@ -91,14 +108,4 @@ elements.btnLeave.addEventListener('click', () => {
 });
 
 // --- INITIALISATION ---
-function resizeCanvas() {
-    elements.canvas.width = window.innerWidth;
-    elements.canvas.height = window.innerHeight;
-    // Si on est dans un menu statique et pas en pleine partie, on force un redessin
-    if (state.gameState !== 'playing') {
-        draw();
-    }
-}
-
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas(); // Appel initial pour régler la taille
+draw(); // Appel initial pour dessiner le fond

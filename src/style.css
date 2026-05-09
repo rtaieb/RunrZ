@@ -1,7 +1,26 @@
 body { margin: 0; overflow: hidden; background-color: #111827; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
 canvas { display: block; }
-#game-container { position: relative; width: 100vw; height: 100vh; }
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    box-sizing: border-box;
+    gap: 1rem;
+}
 
+@media (min-width: 768px) {
+    #game-container {
+        flex-direction: row;
+        padding: 2rem;
+    }
+}
+
+.sidebar-hidden { display: none !important; }
 /* UI Screens */
 .screen {
     position: absolute;

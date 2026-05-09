@@ -22,7 +22,8 @@ export class Runner {
     get y() {
         const laneSpacing = 30;
         const totalHeight = NUM_RUNNERS * laneSpacing;
-        const startY = (elements.canvas.height - totalHeight) / 2;
+        // On décale de 40px vers le bas pour ne pas toucher l'interface des munitions en haut
+        const startY = ((elements.canvas.height - totalHeight) / 2) + 40;
         return startY + (this.lane * laneSpacing);
     }
 

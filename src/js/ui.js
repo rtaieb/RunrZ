@@ -31,7 +31,10 @@ export const elements = {
     scoreboardList: document.getElementById('scoreboard-list'),
     hud: document.getElementById('hud'),
     ammoCount: document.getElementById('ammo-count'),
-    spectatorBanner: document.getElementById('spectator-banner')
+    spectatorBanner: document.getElementById('spectator-banner'),
+    sidebar: document.getElementById('game-sidebar'),
+    sidebarCode: document.getElementById('sidebar-code'),
+    sidebarPlayerList: document.getElementById('sidebar-player-list')
 };
 
 export function showError(msg) {
@@ -50,6 +53,7 @@ export function showScreen(screenName) {
     }
     
     if (screenName === null || screenName === 'playing') {
+        if (elements.sidebar) elements.sidebar.classList.remove('sidebar-hidden');
         if (state.isSpectator) {
             elements.hud.classList.add('hidden');
             elements.spectatorBanner.classList.remove('hidden');
@@ -60,6 +64,7 @@ export function showScreen(screenName) {
             elements.canvas.style.cursor = 'crosshair';
         }
     } else {
+        if (elements.sidebar) elements.sidebar.classList.add('sidebar-hidden');
         elements.hud.classList.add('hidden');
         if (elements.spectatorBanner) elements.spectatorBanner.classList.add('hidden');
         elements.canvas.style.cursor = 'default';
