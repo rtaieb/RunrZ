@@ -64,7 +64,9 @@ export function gameLoop(currentTime) {
     let deltaTime = (currentTime - state.lastTime) / 1000;
     state.lastTime = currentTime;
     
-    if (deltaTime > 0.2) deltaTime = 0.2; 
+    // On permet un rattrapage jusqu'à 60 secondes pour garder la synchronisation
+    // des nombres aléatoires (seeded) entre les joueurs même si l'onglet est inactif.
+    if (deltaTime > 60.0) deltaTime = 60.0; 
     state.accumulator += deltaTime;
 
     while (state.accumulator >= TIME_STEP) {
