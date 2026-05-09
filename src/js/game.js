@@ -9,6 +9,7 @@ const ctx = elements.canvas.getContext('2d');
 export function startGame(roomData) {
     state.runners = [];
     state.currentSeed = roomData.seed; 
+    state.isSpectator = roomData.players[state.currentUser.uid]?.isSpectator || false;
     
     for (let i = 0; i < NUM_RUNNERS; i++) {
         let isLocal = false;
@@ -22,8 +23,8 @@ export function startGame(roomData) {
                 pUid = uid;
                 startX = pData.x || 50;
                 pName = pData.name || "Joueur";
-                if (uid === state.currentUser.uid) isLocal = true;
-                else isRemote = true;
+                if (uid === state.currentUser.uid && !state.isSpectator) isLocal = true;
+                else if (uid !== state.currentUser.uid) isRemote = true;
                 break;
             }
         }
@@ -111,6 +112,12 @@ export function draw() {
 export function handleGameOver(roomData) {
     state.gameState = 'finished';
     showScreen('end');
+    
+    if (roomData.host === state.currentUser.uid) {
+        elements.btnNextRound.classList.remove('hidden');
+    } else {
+        elements.btnNextRound.classList.add('hidden');
+    }
 
     if (roomData.winnerUid === state.currentUser.uid) {
         elements.endTitle.innerText = "Victoire !";
@@ -159,7 +166,7 @@ export function handleGameOver(roomData) {
 }
 
 export function setLocalMovement(isMoving) {
-    if (state.gameState !== 'playing' || !state.currentRoomRef) return;
+    if (state.gameState !== 'playing' || !state.currentRoomRef || state.isSpectator) return;
     
     const localRunner = state.runners.find(r => r.isLocal);
     if (localRunner && !localRunner.isDead && localRunner.isMoving !== isMoving) {
@@ -172,7 +179,7 @@ export function setLocalMovement(isMoving) {
 }
 
 export function attemptShoot(clientX, clientY) {
-    if (state.gameState !== 'playing' || state.hasShot || !state.currentRoomRef) return false;
+    if (state.gameState !== 'playing' || state.hasShot || !state.currentRoomRef || state.isSpectator) return false;
 
     const localRunner = state.runners.find(r => r.isLocal);
     if (localRunner && localRunner.isDead) return false; 

@@ -54,7 +54,7 @@ export async function joinPublicRoom() {
 
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
-            if (data.status === 'waiting' && !data.isPrivate && Object.keys(data.players || {}).length < MAX_HUMANS) {
+            if (!data.isPrivate && Object.keys(data.players || {}).length < MAX_HUMANS) {
                 targetRoomId = docSnap.id;
                 targetRoomData = data;
             }
@@ -68,7 +68,7 @@ export async function joinPublicRoom() {
             while(usedLanes.includes(myLane)) myLane++;
             
             await updateDoc(doc(roomsRef, targetRoomId), {
-                [`players.${state.currentUser.uid}`]: { lane: myLane, x: 50, isMoving: false, name: pName }
+                [`players.${state.currentUser.uid}`]: { lane: myLane, x: 50, isMoving: false, name: pName, isSpectator: targetRoomData.status !== 'waiting' }
             });
             listenToRoom(targetRoomId);
         } else {
@@ -80,7 +80,7 @@ export async function joinPublicRoom() {
                 seed: Math.floor(Math.random() * 1000000),
                 deadRunners: {},
                 players: {
-                    [state.currentUser.uid]: { lane: Math.floor(Math.random() * NUM_RUNNERS), x: 50, isMoving: false, name: pName }
+                    [state.currentUser.uid]: { lane: Math.floor(Math.random() * NUM_RUNNERS), x: 50, isMoving: false, name: pName, isSpectator: false }
                 }
             });
             listenToRoom(newRoomRef.id);
@@ -112,7 +112,7 @@ export async function createRoom() {
             seed: Math.floor(Math.random() * 1000000), 
             deadRunners: {},
             players: {
-                [state.currentUser.uid]: { lane: Math.floor(Math.random() * NUM_RUNNERS), x: 50, isMoving: false, name: pName }
+                [state.currentUser.uid]: { lane: Math.floor(Math.random() * NUM_RUNNERS), x: 50, isMoving: false, name: pName, isSpectator: false }
             }
         });
         listenToRoom(roomCode);
@@ -148,10 +148,6 @@ export async function joinRoom() {
         }
 
         const data = docSnap.data();
-        if (data.status !== 'waiting') {
-            showError("La partie a déjà commencé ou est terminée.");
-            return;
-        }
 
         const playerCount = Object.keys(data.players || {}).length;
         if (playerCount >= MAX_HUMANS) {
@@ -165,7 +161,7 @@ export async function joinRoom() {
         while(usedLanes.includes(myLane)) myLane++; 
         
         await updateDoc(roomRef, {
-            [`players.${state.currentUser.uid}`]: { lane: myLane, x: 50, isMoving: false, name: pName }
+            [`players.${state.currentUser.uid}`]: { lane: myLane, x: 50, isMoving: false, name: pName, isSpectator: data.status !== 'waiting' }
         });
         
         listenToRoom(code);
@@ -189,6 +185,7 @@ export function listenToRoom(roomId) {
         const data = docSnap.data();
         
         if (data.status === 'waiting') {
+            state.gameState = 'lobby';
             showScreen('lobby');
             
             if (data.isPrivate) {
@@ -242,5 +239,27 @@ export async function hostStartGame() {
         await updateDoc(state.currentRoomRef, { status: 'playing' });
     } catch (error) {
         console.error("Erreur au lancement:", error);
+    }
+}
+
+export async function returnToLobby() {
+    if (!state.currentRoomRef) return;
+    try {
+        const docSnap = await getDoc(state.currentRoomRef);
+        const data = docSnap.data();
+        const updates = {
+            status: 'waiting',
+            deadRunners: {}
+        };
+        if (data && data.players) {
+            for (const uid of Object.keys(data.players)) {
+                updates[`players.${uid}.isSpectator`] = false;
+                updates[`players.${uid}.x`] = 50;
+                updates[`players.${uid}.isMoving`] = false;
+            }
+        }
+        await updateDoc(state.currentRoomRef, updates);
+    } catch (error) {
+        console.error("Erreur retour au salon:", error);
     }
 }

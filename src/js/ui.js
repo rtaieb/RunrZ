@@ -1,3 +1,5 @@
+import { state } from './state.js';
+
 export const elements = {
     canvas: document.getElementById('gameCanvas'),
     
@@ -17,7 +19,8 @@ export const elements = {
     joinError: document.getElementById('join-error'),
     
     btnStartHost: document.getElementById('btn-start-host'),
-    btnRestart: document.getElementById('btn-restart'),
+    btnNextRound: document.getElementById('btn-next-round'),
+    btnLeave: document.getElementById('btn-leave'),
     privateCodeContainer: document.getElementById('private-code-container'),
     lobbyCode: document.getElementById('lobby-code'),
     lobbyCount: document.getElementById('lobby-count'),
@@ -27,7 +30,8 @@ export const elements = {
     scoreboard: document.getElementById('scoreboard'),
     scoreboardList: document.getElementById('scoreboard-list'),
     hud: document.getElementById('hud'),
-    ammoCount: document.getElementById('ammo-count')
+    ammoCount: document.getElementById('ammo-count'),
+    spectatorBanner: document.getElementById('spectator-banner')
 };
 
 export function showError(msg) {
@@ -46,10 +50,18 @@ export function showScreen(screenName) {
     }
     
     if (screenName === null || screenName === 'playing') {
-        elements.hud.classList.remove('hidden');
-        elements.canvas.style.cursor = 'crosshair';
+        if (state.isSpectator) {
+            elements.hud.classList.add('hidden');
+            elements.spectatorBanner.classList.remove('hidden');
+            elements.canvas.style.cursor = 'default';
+        } else {
+            elements.hud.classList.remove('hidden');
+            elements.spectatorBanner.classList.add('hidden');
+            elements.canvas.style.cursor = 'crosshair';
+        }
     } else {
         elements.hud.classList.add('hidden');
+        if (elements.spectatorBanner) elements.spectatorBanner.classList.add('hidden');
         elements.canvas.style.cursor = 'default';
     }
 }

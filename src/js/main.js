@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { elements, showScreen, showError } from './ui.js';
-import { joinPublicRoom, createRoom, joinRoom, hostStartGame } from './network.js';
+import { joinPublicRoom, createRoom, joinRoom, hostStartGame, returnToLobby } from './network.js';
 import { setLocalMovement, attemptShoot, draw } from './game.js';
 import { RUNNER_RADIUS } from './config.js';
 
@@ -72,7 +72,11 @@ elements.inputCode.addEventListener('keypress', (e) => {
 
 elements.btnStartHost.addEventListener('click', hostStartGame);
 
-elements.btnRestart.addEventListener('click', () => {
+elements.btnNextRound.addEventListener('click', () => {
+    returnToLobby();
+});
+
+elements.btnLeave.addEventListener('click', () => {
     if (state.unsubRoom) state.unsubRoom();
     state.currentRoomRef = null;
     state.gameState = 'menu';
@@ -86,5 +90,15 @@ elements.btnRestart.addEventListener('click', () => {
     ctx.fillRect(0, 0, elements.canvas.width, elements.canvas.height);
 });
 
-// Lancement initial du dessin (fond d'écran vide)
-draw();
+// --- INITIALISATION ---
+function resizeCanvas() {
+    elements.canvas.width = window.innerWidth;
+    elements.canvas.height = window.innerHeight;
+    // Si on est dans un menu statique et pas en pleine partie, on force un redessin
+    if (state.gameState !== 'playing') {
+        draw();
+    }
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas(); // Appel initial pour régler la taille
