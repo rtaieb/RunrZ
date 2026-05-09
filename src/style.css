@@ -1,4 +1,4 @@
-body { margin: 0; overflow: hidden; background-color: #111827; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
+body { margin: 0; overflow: hidden; background-color: #050505; background-image: url('assets/bg.png'); background-size: cover; background-position: center; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
 canvas { display: block; }
 #game-container {
     position: relative;
@@ -11,11 +11,11 @@ canvas { display: block; }
     padding: 1rem;
     box-sizing: border-box;
     gap: 1rem;
+    background-color: rgba(0, 0, 0, 0.5); /* Assombrit légèrement l'arrière-plan pour plus de lisibilité */
 }
 
 @media (min-width: 768px) {
     #game-container {
-        flex-direction: row;
         padding: 2rem;
     }
 }

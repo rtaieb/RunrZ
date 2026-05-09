@@ -96,7 +96,10 @@ export function fixedUpdate(dt) {
 }
 
 export function draw() {
-    ctx.fillStyle = '#1f2937';
+    ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
+    
+    // Fond semi-transparent pour laisser voir le décor cyberpunk
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
     ctx.fillRect(0, 0, elements.canvas.width, elements.canvas.height);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
