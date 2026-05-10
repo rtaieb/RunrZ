@@ -24,6 +24,9 @@ window.addEventListener('keydown', (e) => {
         if (!state.isRPressed && localRunner && !localRunner.isDead) {
             state.isRPressed = true;
             setLocalSprinting(true);
+            if (!state.isSpacePressed) {
+                setLocalMovement(true);
+            }
         }
     }
 });
@@ -31,11 +34,16 @@ window.addEventListener('keydown', (e) => {
 window.addEventListener('keyup', (e) => {
     if (e.code === 'Space') {
         state.isSpacePressed = false;
-        setLocalMovement(false);
+        if (!state.isRPressed) {
+            setLocalMovement(false);
+        }
     }
     if (e.code === 'KeyR' || e.key === 'r' || e.key === 'R') {
         state.isRPressed = false;
         setLocalSprinting(false);
+        if (!state.isSpacePressed) {
+            setLocalMovement(false);
+        }
     }
 });
 
@@ -86,7 +94,31 @@ elements.canvas.addEventListener('touchstart', (e) => {
 elements.canvas.addEventListener('touchend', (e) => {
     e.preventDefault();
     state.isSpacePressed = false;
-    setLocalMovement(false);
+    if (!state.isRPressed) {
+        setLocalMovement(false);
+    }
+});
+
+// Sprint mobile
+elements.btnSprintMobile.addEventListener('touchstart', (e) => {
+    e.preventDefault(); 
+    const localRunner = state.runners.find(r => r.isLocal);
+    if (!state.isRPressed && localRunner && !localRunner.isDead) {
+        state.isRPressed = true;
+        setLocalSprinting(true);
+        if (!state.isSpacePressed) {
+            setLocalMovement(true);
+        }
+    }
+});
+
+elements.btnSprintMobile.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    state.isRPressed = false;
+    setLocalSprinting(false);
+    if (!state.isSpacePressed) {
+        setLocalMovement(false);
+    }
 });
 
 // --- EVENEMENTS DES BOUTONS ---

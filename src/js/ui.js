@@ -34,7 +34,8 @@ export const elements = {
     spectatorBanner: document.getElementById('spectator-banner'),
     sidebar: document.getElementById('game-sidebar'),
     sidebarCode: document.getElementById('sidebar-code'),
-    sidebarPlayerList: document.getElementById('sidebar-player-list')
+    sidebarPlayerList: document.getElementById('sidebar-player-list'),
+    btnSprintMobile: document.getElementById('btn-sprint-mobile')
 };
 
 export function showError(msg) {
@@ -57,16 +58,19 @@ export function showScreen(screenName) {
         if (state.isSpectator) {
             elements.hud.classList.add('hidden');
             elements.spectatorBanner.classList.remove('hidden');
+            if (elements.btnSprintMobile) elements.btnSprintMobile.classList.add('hidden');
             elements.canvas.style.cursor = 'default';
         } else {
             elements.hud.classList.remove('hidden');
             elements.spectatorBanner.classList.add('hidden');
+            if (elements.btnSprintMobile) elements.btnSprintMobile.classList.remove('hidden');
             elements.canvas.style.cursor = "url('src/assets/crosshair.svg') 16 16, crosshair";
         }
     } else {
         if (elements.sidebar) elements.sidebar.classList.add('sidebar-hidden');
         elements.hud.classList.add('hidden');
         if (elements.spectatorBanner) elements.spectatorBanner.classList.add('hidden');
+        if (elements.btnSprintMobile) elements.btnSprintMobile.classList.add('hidden');
         elements.canvas.style.cursor = 'default';
     }
 }

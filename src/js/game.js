@@ -46,17 +46,41 @@ export function startGame(roomData) {
     
     state.lastTime = performance.now();
     state.accumulator = 0;
+    
+    // Rattrapage (Fast-Forward) pour les spectateurs arrivant en cours de partie
+    if (roomData.startTime) {
+        let elapsedSeconds = (Date.now() - roomData.startTime) / 1000;
+        if (elapsedSeconds > 0) {
+            const catchupSteps = Math.floor(elapsedSeconds / TIME_STEP);
+            for (let step = 0; step < catchupSteps; step++) {
+                const currentSimTime = roomData.startTime + (step * TIME_STEP * 1000);
+                for (const runner of state.runners) {
+                    if (runner.isNPC) {
+                        const deathTime = roomData.deadRunners?.[runner.lane];
+                        const isDeadAtThisTime = deathTime && currentSimTime >= deathTime;
+                        if (!isDeadAtThisTime) {
+                            runner.fixedUpdate(TIME_STEP);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     if (state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
     gameLoop(state.lastTime);
 }
 
 export function updateRemotePlayers(roomData) {
     for (const [uid, pData] of Object.entries(roomData.players)) {
-        if (uid !== state.currentUser.uid) {
-            const runner = state.runners.find(r => r.uid === uid);
-            if (runner) {
-                runner.isMoving = pData.isMoving;
-                runner.isSprinting = pData.isSprinting;
+        const runner = state.runners.find(r => r.uid === uid);
+        if (runner) {
+            // Synchronise les états de mouvement (utile pour refléter les actions entre multiples onglets d'un même joueur)
+            runner.isMoving = pData.isMoving;
+            runner.isSprinting = pData.isSprinting;
+            
+            // On ne met à jour la position stricte que pour les autres joueurs pour éviter le rubberbanding sur le joueur local
+            if (uid !== state.currentUser.uid) {
                 if (Math.abs(runner.x - pData.x) > 20) {
                     runner.x = pData.x;
                 }
@@ -230,7 +254,7 @@ export function attemptShoot(clientX, clientY) {
 
     if (hitRunner) {
         updateDoc(state.currentRoomRef, {
-            [`deadRunners.${hitRunner.lane}`]: true
+            [`deadRunners.${hitRunner.lane}`]: Date.now()
         }).catch(console.error);
     }
     

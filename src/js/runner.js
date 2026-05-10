@@ -93,13 +93,25 @@ export class Runner {
         let drawY = this.y;
         if (this.isMoving && !this.isDead) {
             const time = performance.now() / 100;
-            drawY += Math.sin(time + this.lane) * 3;
+            // Rebondit plus vite si le coureur sprinte
+            const bounceSpeed = this.isSprinting ? 2.0 : 1.0;
+            drawY += Math.sin(time * bounceSpeed + this.lane) * 3;
         }
 
         if (sprite && sprite.ready) {
             ctx.save();
             if (this.isDead) {
                 ctx.globalAlpha = 0.3;
+            }
+            
+            // Effet de traînée (Ghost Trail) si le joueur sprinte
+            if (this.isSprinting && this.isMoving && !this.isDead) {
+                ctx.save();
+                ctx.globalAlpha = 0.4;
+                ctx.drawImage(sprite.canvas, this.x - size/2 - 15, drawY - size/2 - 5, size, size);
+                ctx.globalAlpha = 0.15;
+                ctx.drawImage(sprite.canvas, this.x - size/2 - 30, drawY - size/2 - 5, size, size);
+                ctx.restore();
             }
             
             ctx.drawImage(
