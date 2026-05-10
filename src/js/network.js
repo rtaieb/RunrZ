@@ -278,7 +278,10 @@ export function listenToRoom(roomId) {
 export async function hostStartGame() {
     if (!state.currentRoomRef) return;
     try {
-        await updateDoc(state.currentRoomRef, { status: 'playing' });
+        await updateDoc(state.currentRoomRef, { 
+            status: 'playing',
+            startTime: Date.now()
+        });
     } catch (error) {
         console.error("Erreur au lancement:", error);
     }
