@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { elements, showScreen, showError } from './ui.js';
-import { joinPublicRoom, createRoom, joinRoom, hostStartGame, returnToLobby } from './network.js';
+import { joinPublicRoom, createRoom, joinRoom, hostStartGame, restartGame } from './network.js';
 import { setLocalMovement, setLocalSprinting, attemptShoot, draw } from './game.js';
 import { RUNNER_RADIUS } from './config.js';
 
@@ -133,7 +133,7 @@ elements.inputCode.addEventListener('keypress', (e) => {
 elements.btnStartHost.addEventListener('click', hostStartGame);
 
 elements.btnNextRound.addEventListener('click', () => {
-    returnToLobby();
+    restartGame();
 });
 
 elements.btnLeave.addEventListener('click', () => {

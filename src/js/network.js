@@ -287,13 +287,15 @@ export async function hostStartGame() {
     }
 }
 
-export async function returnToLobby() {
+export async function restartGame() {
     if (!state.currentRoomRef) return;
     try {
         const docSnap = await getDoc(state.currentRoomRef);
         const data = docSnap.data();
         const updates = {
-            status: 'waiting',
+            status: 'playing',
+            seed: Math.floor(Math.random() * 1000000), // Nouveau tirage pour les PNJ
+            startTime: Date.now(),
             deadRunners: {}
         };
         if (data && data.players) {
@@ -301,10 +303,11 @@ export async function returnToLobby() {
                 updates[`players.${uid}.isSpectator`] = false;
                 updates[`players.${uid}.x`] = 50;
                 updates[`players.${uid}.isMoving`] = false;
+                updates[`players.${uid}.isSprinting`] = false;
             }
         }
         await updateDoc(state.currentRoomRef, updates);
     } catch (error) {
-        console.error("Erreur retour au salon:", error);
+        console.error("Erreur lors de la relance de la course:", error);
     }
 }
