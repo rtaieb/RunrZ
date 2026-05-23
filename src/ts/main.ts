@@ -9,6 +9,13 @@ if (savedName) {
     elements.inputPlayerName.value = savedName;
 }
 
+const urlParams = new URLSearchParams(window.location.search);
+const roomParam = urlParams.get('room');
+if (roomParam) {
+    elements.inputCode.value = roomParam.toUpperCase().substring(0, 5);
+}
+
+
 // --- GESTION DES ENTREES ---
 window.addEventListener('keydown', (e: KeyboardEvent) => {
     if (e.code === 'Space') {

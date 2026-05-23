@@ -84,22 +84,60 @@ export function showScreen(screenName: GameState | null) {
 }
 
 export function copyRoomCode() {
-    const code = elements.lobbyCode.innerText;
+    const code = state.currentRoomRef?.id || elements.lobbyCode.innerText;
+    if (!code || code === '-----') return;
+    
+    const shareUrl = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(code)}`;
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareUrl)
+            .then(() => {
+                showToast("Lien du salon copié !");
+            })
+            .catch(err => {
+                console.error("Erreur de copie via clipboard API", err);
+                copyFallback(shareUrl);
+            });
+    } else {
+        copyFallback(shareUrl);
+    }
+}
+
+function copyFallback(text: string) {
     const textArea = document.createElement("textarea");
-    textArea.value = code;
+    textArea.value = text;
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
     document.body.appendChild(textArea);
     textArea.select();
     try {
         document.execCommand('copy');
-        const toast = document.getElementById('copy-toast');
-        if (toast) {
-            toast.classList.remove('opacity-0');
-            setTimeout(() => toast.classList.add('opacity-0'), 2000);
-        }
+        showToast("Lien du salon copié !");
     } catch (err) {
         console.error("Erreur de copie", err);
     }
     document.body.removeChild(textArea);
 }
 
+function showToast(message: string) {
+    let toast = document.getElementById('global-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'global-toast';
+        toast.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity duration-300 opacity-0';
+        document.body.appendChild(toast);
+    }
+    toast.innerText = message;
+    toast.classList.remove('opacity-0');
+    
+    const existingTimeout = (toast as any).timeoutId;
+    if (existingTimeout) clearTimeout(existingTimeout);
+    
+    (toast as any).timeoutId = setTimeout(() => {
+        if (toast) toast.classList.add('opacity-0');
+    }, 2000);
+}
+
 window.copyRoomCode = copyRoomCode;
+
