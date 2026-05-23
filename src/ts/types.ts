@@ -9,6 +9,8 @@ export interface PlayerData {
     x?: number;
     isMoving?: boolean;
     isSprinting?: boolean;
+    cursorX?: number;
+    cursorY?: number;
 }
 
 export interface ShootEvent {

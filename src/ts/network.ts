@@ -329,3 +329,36 @@ export async function restartGame() {
         console.error("Erreur lors de la relance de la course:", error);
     }
 }
+
+let lastCursorSentTime = 0;
+const CURSOR_SEND_INTERVAL = 150; // ms
+let cursorTimeoutId: any = null;
+
+export function updateLocalCursor(x: number, y: number) {
+    if (!state.currentRoomRef || !state.currentUser) return;
+    
+    const now = Date.now();
+    
+    const send = () => {
+        if (!state.currentRoomRef || !state.currentUser) return;
+        updateDoc(state.currentRoomRef, {
+            [`players.${state.currentUser.uid}.cursorX`]: x,
+            [`players.${state.currentUser.uid}.cursorY`]: y
+        }).catch(() => {});
+    };
+
+    if (now - lastCursorSentTime >= CURSOR_SEND_INTERVAL) {
+        lastCursorSentTime = now;
+        send();
+        if (cursorTimeoutId) {
+            clearTimeout(cursorTimeoutId);
+            cursorTimeoutId = null;
+        }
+    } else {
+        if (cursorTimeoutId) clearTimeout(cursorTimeoutId);
+        cursorTimeoutId = setTimeout(() => {
+            send();
+            lastCursorSentTime = Date.now();
+        }, CURSOR_SEND_INTERVAL);
+    }
+}

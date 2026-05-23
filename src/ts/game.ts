@@ -89,6 +89,8 @@ export function updateRemotePlayers(roomData: RoomData) {
                 if (pData.x !== undefined && Math.abs(runner.x - pData.x) > 20) {
                     runner.x = pData.x;
                 }
+                runner.targetCursorX = pData.cursorX !== undefined ? pData.cursorX : null;
+                runner.targetCursorY = pData.cursorY !== undefined ? pData.cursorY : null;
             }
         }
     }
@@ -145,6 +147,63 @@ export function draw() {
     }
 
     state.runners.forEach(runner => runner.draw(ctx));
+
+    // List of cyberpunk colors for player cursors
+    const CURSOR_COLORS = [
+        '#00f0ff', // Cyber Cyan
+        '#ff007f', // Cyber Pink/Rose
+        '#cc00ff', // Neon Purple
+        '#39ff14', // Neon Green
+        '#ff9900', // Neon Orange
+        '#ffff00', // Neon Yellow
+    ];
+
+    state.runners.forEach(runner => {
+        const isNotLocal = runner.uid && runner.uid !== state.currentUser?.uid;
+        
+        if (isNotLocal && !runner.isDead) {
+            if (runner.targetCursorX !== null && runner.targetCursorY !== null) {
+                if (runner.currentCursorX === null || runner.currentCursorY === null) {
+                    runner.currentCursorX = runner.targetCursorX;
+                    runner.currentCursorY = runner.targetCursorY;
+                } else {
+                    // Smoothly slide cursor position
+                    runner.currentCursorX += (runner.targetCursorX - runner.currentCursorX) * 0.15;
+                    runner.currentCursorY += (runner.targetCursorY - runner.currentCursorY) * 0.15;
+                }
+
+                const color = CURSOR_COLORS[runner.lane % CURSOR_COLORS.length];
+                drawCrosshair(ctx, runner.currentCursorX, runner.currentCursorY, color);
+            }
+        }
+    });
+}
+
+function drawCrosshair(ctx: CanvasRenderingContext2D, x: number, y: number, color: string) {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    
+    // Draw outer reticle circle
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Draw crosshair tick lines
+    ctx.beginPath();
+    ctx.moveTo(x - 12, y); ctx.lineTo(x - 4, y);
+    ctx.moveTo(x + 4, y); ctx.lineTo(x + 12, y);
+    ctx.moveTo(x, y - 12); ctx.lineTo(x, y - 4);
+    ctx.moveTo(x, y + 4); ctx.lineTo(x, y + 12);
+    ctx.stroke();
+    
+    // Draw center dot
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
 }
 
 export function handleGameOver(roomData: RoomData) {

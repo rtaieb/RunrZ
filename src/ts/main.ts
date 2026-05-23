@@ -1,6 +1,6 @@
 import { state } from './state';
 import { elements, showScreen, showError } from './ui';
-import { joinPublicRoom, createRoom, joinRoom, hostStartGame, restartGame } from './network';
+import { joinPublicRoom, createRoom, joinRoom, hostStartGame, restartGame, updateLocalCursor } from './network';
 import { setLocalMovement, setLocalSprinting, attemptShoot, draw } from './game';
 import { RUNNER_RADIUS } from './config';
 
@@ -68,6 +68,19 @@ elements.canvas.addEventListener('mousedown', (e: MouseEvent) => {
     const pos = getCanvasPos(e);
     attemptShoot(pos.x, pos.y);
 });
+
+elements.canvas.addEventListener('mousemove', (e: MouseEvent) => {
+    if (state.gameState !== 'playing' || state.isSpectator) return;
+    const pos = getCanvasPos(e);
+    updateLocalCursor(pos.x, pos.y);
+});
+
+elements.canvas.addEventListener('touchmove', (e: TouchEvent) => {
+    if (state.gameState !== 'playing' || state.isSpectator || e.touches.length === 0) return;
+    const pos = getCanvasPos(e.touches[0]);
+    updateLocalCursor(pos.x, pos.y);
+});
+
 
 elements.canvas.addEventListener('touchstart', (e: TouchEvent) => {
     e.preventDefault(); 

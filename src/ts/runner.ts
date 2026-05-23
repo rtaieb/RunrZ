@@ -59,6 +59,11 @@ export class Runner {
     isDead: boolean;
     stateTimer: number;
     spriteIndex: number;
+    
+    targetCursorX: number | null = null;
+    targetCursorY: number | null = null;
+    currentCursorX: number | null = null;
+    currentCursorY: number | null = null;
 
     constructor(lane: number, isLocal: boolean, isRemote: boolean, uid: string | null, xStart: number = 50, name: string = "PNJ") {
         this.lane = lane;
