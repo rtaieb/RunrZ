@@ -1,20 +1,26 @@
-import { updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { NUM_RUNNERS, RUNNER_RADIUS, FINISH_LINE_OFFSET, TIME_STEP } from './config.js';
-import { state } from './state.js';
-import { elements, showScreen } from './ui.js';
-import { Runner } from './runner.js';
+import { updateDoc } from "firebase/firestore";
+import { NUM_RUNNERS, RUNNER_RADIUS, FINISH_LINE_OFFSET, TIME_STEP } from './config';
+import { state } from './state';
+import { elements, showScreen } from './ui';
+import { Runner } from './runner';
+import type { RoomData } from './types';
 
-const ctx = elements.canvas.getContext('2d');
+const ctx = elements.canvas.getContext('2d') as CanvasRenderingContext2D;
 
-export function startGame(roomData) {
+export function startGame(roomData: RoomData) {
     state.runners = [];
     state.currentSeed = roomData.seed; 
-    state.isSpectator = roomData.players[state.currentUser.uid]?.isSpectator || false;
+    
+    if (state.currentUser && roomData.players[state.currentUser.uid]) {
+        state.isSpectator = roomData.players[state.currentUser.uid].isSpectator || false;
+    } else {
+        state.isSpectator = false;
+    }
     
     for (let i = 0; i < NUM_RUNNERS; i++) {
         let isLocal = false;
         let isRemote = false;
-        let pUid = null;
+        let pUid: string | null = null;
         let startX = 50;
         let pName = "PNJ " + (i + 1);
         
@@ -23,8 +29,8 @@ export function startGame(roomData) {
                 pUid = uid;
                 startX = pData.x || 50;
                 pName = pData.name || "Joueur";
-                if (uid === state.currentUser.uid && !state.isSpectator) isLocal = true;
-                else if (uid !== state.currentUser.uid) isRemote = true;
+                if (state.currentUser && uid === state.currentUser.uid && !state.isSpectator) isLocal = true;
+                else if (state.currentUser && uid !== state.currentUser.uid) isRemote = true;
                 break;
             }
         }
@@ -36,7 +42,7 @@ export function startGame(roomData) {
     elements.ammoCount.className = "text-red-400 font-extrabold text-2xl ml-1";
     
     if (!state.isSpectator) {
-        elements.canvas.style.cursor = `url('src/assets/crosshair.svg') 16 16, crosshair`;
+        elements.canvas.style.cursor = `url('/src/assets/crosshair.svg') 16 16, crosshair`;
     } else {
         elements.canvas.style.cursor = 'default';
     }
@@ -47,7 +53,6 @@ export function startGame(roomData) {
     state.lastTime = performance.now();
     state.accumulator = 0;
     
-    // Rattrapage (Fast-Forward) pour les spectateurs arrivant en cours de partie
     if (roomData.startTime) {
         let elapsedSeconds = (Date.now() - roomData.startTime) / 1000;
         if (elapsedSeconds > 0) {
@@ -57,7 +62,7 @@ export function startGame(roomData) {
                 for (const runner of state.runners) {
                     if (runner.isNPC) {
                         const deathTime = roomData.deadRunners?.[runner.lane];
-                        const isDeadAtThisTime = deathTime && currentSimTime >= deathTime;
+                        const isDeadAtThisTime = deathTime && currentSimTime >= (deathTime as number);
                         if (!isDeadAtThisTime) {
                             runner.fixedUpdate(TIME_STEP);
                         }
@@ -71,17 +76,17 @@ export function startGame(roomData) {
     gameLoop(state.lastTime);
 }
 
-export function updateRemotePlayers(roomData) {
+export function updateRemotePlayers(roomData: RoomData) {
+    if (!state.currentUser) return;
+    
     for (const [uid, pData] of Object.entries(roomData.players)) {
         const runner = state.runners.find(r => r.uid === uid);
         if (runner) {
-            // Synchronise les états de mouvement (utile pour refléter les actions entre multiples onglets d'un même joueur)
-            runner.isMoving = pData.isMoving;
-            runner.isSprinting = pData.isSprinting;
+            runner.isMoving = pData.isMoving || false;
+            runner.isSprinting = pData.isSprinting || false;
             
-            // On ne met à jour la position stricte que pour les autres joueurs pour éviter le rubberbanding sur le joueur local
             if (uid !== state.currentUser.uid) {
-                if (Math.abs(runner.x - pData.x) > 20) {
+                if (pData.x !== undefined && Math.abs(runner.x - pData.x) > 20) {
                     runner.x = pData.x;
                 }
             }
@@ -89,14 +94,12 @@ export function updateRemotePlayers(roomData) {
     }
 }
 
-export function gameLoop(currentTime) {
+export function gameLoop(currentTime: number) {
     if (state.gameState !== 'playing') return;
 
     let deltaTime = (currentTime - state.lastTime) / 1000;
     state.lastTime = currentTime;
     
-    // On permet un rattrapage jusqu'à 60 secondes pour garder la synchronisation
-    // des nombres aléatoires (seeded) entre les joueurs même si l'onglet est inactif.
     if (deltaTime > 60.0) deltaTime = 60.0; 
     state.accumulator += deltaTime;
 
@@ -108,14 +111,14 @@ export function gameLoop(currentTime) {
     state.animationFrameId = requestAnimationFrame(gameLoop);
 }
 
-export function fixedUpdate(dt) {
+export function fixedUpdate(dt: number) {
     const finishLineX = elements.canvas.width - FINISH_LINE_OFFSET;
 
     for (const runner of state.runners) {
         runner.fixedUpdate(dt);
         
         if (!runner.isDead && runner.x + RUNNER_RADIUS >= finishLineX) {
-            if (state.gameState === 'playing') {
+            if (state.gameState === 'playing' && state.currentRoomRef) {
                 state.gameState = 'ending'; 
                 updateDoc(state.currentRoomRef, {
                     status: 'finished',
@@ -129,7 +132,6 @@ export function fixedUpdate(dt) {
 export function draw() {
     ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
     
-    // Fond semi-transparent pour laisser voir le décor cyberpunk
     ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
     ctx.fillRect(0, 0, elements.canvas.width, elements.canvas.height);
 
@@ -145,17 +147,17 @@ export function draw() {
     state.runners.forEach(runner => runner.draw(ctx));
 }
 
-export function handleGameOver(roomData) {
+export function handleGameOver(roomData: RoomData) {
     state.gameState = 'finished';
     showScreen('end');
     
-    if (roomData.host === state.currentUser.uid) {
+    if (state.currentUser && roomData.host === state.currentUser.uid) {
         elements.btnNextRound.classList.remove('hidden');
     } else {
         elements.btnNextRound.classList.add('hidden');
     }
 
-    if (roomData.winnerUid === state.currentUser.uid) {
+    if (state.currentUser && roomData.winnerUid === state.currentUser.uid) {
         elements.endTitle.innerText = "Victoire !";
         elements.endTitle.className = "text-5xl font-bold mb-4 text-green-400";
         elements.endMessage.innerText = "Tu as bluffé tout le monde et fini en tête.";
@@ -201,8 +203,8 @@ export function handleGameOver(roomData) {
     elements.scoreboard.classList.remove('hidden');
 }
 
-export function setLocalMovement(isMoving) {
-    if (state.gameState !== 'playing' || !state.currentRoomRef || state.isSpectator) return;
+export function setLocalMovement(isMoving: boolean) {
+    if (state.gameState !== 'playing' || !state.currentRoomRef || state.isSpectator || !state.currentUser) return;
     
     const localRunner = state.runners.find(r => r.isLocal);
     if (localRunner && !localRunner.isDead && localRunner.isMoving !== isMoving) {
@@ -214,8 +216,8 @@ export function setLocalMovement(isMoving) {
     }
 }
 
-export function setLocalSprinting(isSprinting) {
-    if (state.gameState !== 'playing' || !state.currentRoomRef || state.isSpectator) return;
+export function setLocalSprinting(isSprinting: boolean) {
+    if (state.gameState !== 'playing' || !state.currentRoomRef || state.isSpectator || !state.currentUser) return;
     
     const localRunner = state.runners.find(r => r.isLocal);
     if (localRunner && !localRunner.isDead && localRunner.isSprinting !== isSprinting) {
@@ -227,7 +229,7 @@ export function setLocalSprinting(isSprinting) {
     }
 }
 
-export function attemptShoot(clientX, clientY) {
+export function attemptShoot(clientX: number, clientY: number): boolean {
     if (state.gameState !== 'playing' || state.hasShot || !state.currentRoomRef || state.isSpectator) return false;
 
     const localRunner = state.runners.find(r => r.isLocal);

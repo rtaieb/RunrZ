@@ -1,18 +1,22 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { initializeApp } from "firebase/app";
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "firebase/auth";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, onSnapshot, DocumentData, DocumentSnapshot } from "firebase/firestore";
 
-import { appId, firebaseConfig, MAX_HUMANS, NUM_RUNNERS } from './config.js';
-import { state } from './state.js';
-import { elements, showScreen, showError } from './ui.js';
-import { generateRoomCode } from './utils.js';
-import { startGame, updateRemotePlayers, handleGameOver, setLocalMovement } from './game.js';
+import { appId, firebaseConfig, MAX_HUMANS, NUM_RUNNERS } from './config';
+import { state } from './state';
+import { elements, showScreen, showError } from './ui';
+import { generateRoomCode } from './utils';
+import { startGame, updateRemotePlayers, handleGameOver, setLocalMovement } from './game';
+import type { RoomData } from './types';
+
+// Let Vite handle global variables properly
+declare const __initial_auth_token: string | undefined;
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 export const db = getFirestore(app);
 
-export function getPlayerName() {
+export function getPlayerName(): string {
     const val = elements.inputPlayerName.value.trim();
     if (val) {
         localStorage.setItem('runrz_player_name', val);
@@ -30,7 +34,7 @@ export const initAuth = async () => {
 };
 
 onAuthStateChanged(auth, (user) => {
-    state.currentUser = user;
+    state.currentUser = user as any;
     if (user) {
         elements.authLoading.classList.add('hidden');
         elements.startActions.classList.remove('hidden');
@@ -52,11 +56,11 @@ export async function joinPublicRoom() {
         const roomsRef = collection(db, 'artifacts', appId, 'public', 'data', 'rooms');
         const snapshot = await getDocs(roomsRef);
         
-        let targetRoomId = null;
-        let targetRoomData = null;
+        let targetRoomId: string | null = null;
+        let targetRoomData: RoomData | null = null;
 
         snapshot.forEach(docSnap => {
-            const data = docSnap.data();
+            const data = docSnap.data() as RoomData;
             if (!data.isPrivate && Object.keys(data.players || {}).length < MAX_HUMANS) {
                 targetRoomId = docSnap.id;
                 targetRoomData = data;
@@ -65,13 +69,14 @@ export async function joinPublicRoom() {
 
         const pName = getPlayerName();
 
-        if (targetRoomId) {
-            const usedLanes = Object.values(targetRoomData.players).map(p => p.lane);
+        if (targetRoomId && targetRoomData) {
+            const trData = targetRoomData as RoomData;
+            const usedLanes = Object.values(trData.players).map(p => p.lane);
             let myLane = 0;
             while(usedLanes.includes(myLane)) myLane++;
             
             await updateDoc(doc(roomsRef, targetRoomId), {
-                [`players.${state.currentUser.uid}`]: { lane: myLane, x: 50, isMoving: false, name: pName, isSpectator: targetRoomData.status !== 'waiting' }
+                [`players.${state.currentUser.uid}`]: { lane: myLane, x: 50, isMoving: false, name: pName, isSpectator: trData.status !== 'waiting' }
             });
             listenToRoom(targetRoomId);
         } else {
@@ -150,7 +155,7 @@ export async function joinRoom() {
             return;
         }
 
-        const data = docSnap.data();
+        const data = docSnap.data() as RoomData;
 
         const playerCount = Object.keys(data.players || {}).length;
         if (playerCount >= MAX_HUMANS) {
@@ -177,14 +182,13 @@ export async function joinRoom() {
     }
 }
 
-function updateSidebar(data, roomId) {
+function updateSidebar(data: RoomData, roomId: string) {
     if (elements.sidebarCode) {
         elements.sidebarCode.innerText = data.isPrivate ? roomId : "PUBLIC";
     }
     if (elements.sidebarPlayerList && data.players) {
         elements.sidebarPlayerList.innerHTML = '';
         
-        // Convertir l'objet players en tableau et le trier par ordre alphabétique du pseudo
         const sortedPlayers = Object.entries(data.players).sort((a, b) => {
             return a[1].name.localeCompare(b[1].name);
         });
@@ -214,15 +218,15 @@ function updateSidebar(data, roomId) {
     }
 }
 
-export function listenToRoom(roomId) {
+export function listenToRoom(roomId: string) {
     state.currentRoomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
     state.gameState = 'lobby';
     
     if (state.unsubRoom) state.unsubRoom();
     
-    state.unsubRoom = onSnapshot(state.currentRoomRef, (docSnap) => {
+    state.unsubRoom = onSnapshot(state.currentRoomRef, (docSnap: DocumentSnapshot<DocumentData, DocumentData>) => {
         if (!docSnap.exists()) return;
-        const data = docSnap.data();
+        const data = docSnap.data() as RoomData;
         
         updateSidebar(data, roomId);
         
@@ -240,7 +244,7 @@ export function listenToRoom(roomId) {
             const playerCount = Object.keys(data.players || {}).length;
             elements.lobbyCount.innerText = `${playerCount}/${MAX_HUMANS}`;
             
-            if (data.host === state.currentUser.uid) {
+            if (state.currentUser && data.host === state.currentUser.uid) {
                 elements.btnStartHost.classList.remove('hidden');
                 elements.lobbyWaiting.classList.add('hidden');
             } else {
@@ -255,7 +259,6 @@ export function listenToRoom(roomId) {
                 updateRemotePlayers(data);
             }
             
-            // Synchroniser les morts
             if (data.deadRunners) {
                 for (const lane of Object.keys(data.deadRunners)) {
                     const runner = state.runners.find(r => r.lane === parseInt(lane));
@@ -291,10 +294,10 @@ export async function restartGame() {
     if (!state.currentRoomRef) return;
     try {
         const docSnap = await getDoc(state.currentRoomRef);
-        const data = docSnap.data();
-        const updates = {
+        const data = docSnap.data() as RoomData;
+        const updates: any = {
             status: 'playing',
-            seed: Math.floor(Math.random() * 1000000), // Nouveau tirage pour les PNJ
+            seed: Math.floor(Math.random() * 1000000), 
             startTime: Date.now(),
             deadRunners: {}
         };

@@ -1,8 +1,8 @@
-import { state } from './state.js';
-import { elements, showScreen, showError } from './ui.js';
-import { joinPublicRoom, createRoom, joinRoom, hostStartGame, restartGame } from './network.js';
-import { setLocalMovement, setLocalSprinting, attemptShoot, draw } from './game.js';
-import { RUNNER_RADIUS } from './config.js';
+import { state } from './state';
+import { elements, showScreen, showError } from './ui';
+import { joinPublicRoom, createRoom, joinRoom, hostStartGame, restartGame } from './network';
+import { setLocalMovement, setLocalSprinting, attemptShoot, draw } from './game';
+import { RUNNER_RADIUS } from './config';
 
 const savedName = localStorage.getItem('runrz_player_name');
 if (savedName) {
@@ -10,7 +10,7 @@ if (savedName) {
 }
 
 // --- GESTION DES ENTREES ---
-window.addEventListener('keydown', (e) => {
+window.addEventListener('keydown', (e: KeyboardEvent) => {
     if (e.code === 'Space') {
         const localRunner = state.runners.find(r => r.isLocal);
         if (!state.isSpacePressed && localRunner && !localRunner.isDead) {
@@ -31,7 +31,7 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
-window.addEventListener('keyup', (e) => {
+window.addEventListener('keyup', (e: KeyboardEvent) => {
     if (e.code === 'Space') {
         state.isSpacePressed = false;
         if (!state.isRPressed) {
@@ -47,7 +47,7 @@ window.addEventListener('keyup', (e) => {
     }
 });
 
-function getCanvasPos(e) {
+function getCanvasPos(e: MouseEvent | Touch) {
     const rect = elements.canvas.getBoundingClientRect();
     const scaleX = elements.canvas.width / rect.width;
     const scaleY = elements.canvas.height / rect.height;
@@ -57,12 +57,12 @@ function getCanvasPos(e) {
     };
 }
 
-elements.canvas.addEventListener('mousedown', (e) => {
+elements.canvas.addEventListener('mousedown', (e: MouseEvent) => {
     const pos = getCanvasPos(e);
     attemptShoot(pos.x, pos.y);
 });
 
-elements.canvas.addEventListener('touchstart', (e) => {
+elements.canvas.addEventListener('touchstart', (e: TouchEvent) => {
     e.preventDefault(); 
     
     const touch = e.touches[0];
@@ -91,7 +91,7 @@ elements.canvas.addEventListener('touchstart', (e) => {
     }
 });
 
-elements.canvas.addEventListener('touchend', (e) => {
+elements.canvas.addEventListener('touchend', (e: TouchEvent) => {
     e.preventDefault();
     state.isSpacePressed = false;
     if (!state.isRPressed) {
@@ -100,33 +100,35 @@ elements.canvas.addEventListener('touchend', (e) => {
 });
 
 // Sprint mobile
-elements.btnSprintMobile.addEventListener('touchstart', (e) => {
-    e.preventDefault(); 
-    const localRunner = state.runners.find(r => r.isLocal);
-    if (!state.isRPressed && localRunner && !localRunner.isDead) {
-        state.isRPressed = true;
-        setLocalSprinting(true);
-        if (!state.isSpacePressed) {
-            setLocalMovement(true);
+if (elements.btnSprintMobile) {
+    elements.btnSprintMobile.addEventListener('touchstart', (e: TouchEvent) => {
+        e.preventDefault(); 
+        const localRunner = state.runners.find(r => r.isLocal);
+        if (!state.isRPressed && localRunner && !localRunner.isDead) {
+            state.isRPressed = true;
+            setLocalSprinting(true);
+            if (!state.isSpacePressed) {
+                setLocalMovement(true);
+            }
         }
-    }
-});
+    });
 
-elements.btnSprintMobile.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    state.isRPressed = false;
-    setLocalSprinting(false);
-    if (!state.isSpacePressed) {
-        setLocalMovement(false);
-    }
-});
+    elements.btnSprintMobile.addEventListener('touchend', (e: TouchEvent) => {
+        e.preventDefault();
+        state.isRPressed = false;
+        setLocalSprinting(false);
+        if (!state.isSpacePressed) {
+            setLocalMovement(false);
+        }
+    });
+}
 
 // --- EVENEMENTS DES BOUTONS ---
 elements.btnPublic.addEventListener('click', joinPublicRoom);
 elements.btnCreate.addEventListener('click', createRoom);
 elements.btnJoin.addEventListener('click', joinRoom);
 
-elements.inputCode.addEventListener('keypress', (e) => {
+elements.inputCode.addEventListener('keypress', (e: KeyboardEvent) => {
     if (e.key === 'Enter') joinRoom();
 });
 
@@ -146,9 +148,11 @@ elements.btnLeave.addEventListener('click', () => {
     elements.scoreboard.classList.add('hidden'); 
     
     const ctx = elements.canvas.getContext('2d');
-    ctx.fillStyle = '#111827';
-    ctx.fillRect(0, 0, elements.canvas.width, elements.canvas.height);
+    if (ctx) {
+        ctx.fillStyle = '#111827';
+        ctx.fillRect(0, 0, elements.canvas.width, elements.canvas.height);
+    }
 });
 
 // --- INITIALISATION ---
-draw(); // Appel initial pour dessiner le fond
+draw(); 

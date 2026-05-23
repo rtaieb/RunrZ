@@ -1,0 +1,29 @@
+{
+  "name": "runrz",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rtaieb/RunrZ.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rtaieb/RunrZ/issues"
+  },
+  "homepage": "https://github.com/rtaieb/RunrZ#readme",
+  "description": "",
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vite": "^8.0.11"
+  },
+  "dependencies": {
+    "firebase": "^12.13.0"
+  }
+}

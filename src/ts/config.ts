@@ -1,3 +1,4 @@
+// @ts-ignore
 export const appId = typeof __app_id !== 'undefined' ? __app_id : 'runrz-multiplayer-demo';
 
 export const firebaseConfig = {

@@ -1,12 +1,17 @@
-import { NUM_RUNNERS, RUNNER_RADIUS, BASE_SPEED, NPC_MIN_PAUSE_TIME, NPC_MAX_PAUSE_TIME, NPC_MIN_RUN_TIME, NPC_MAX_RUN_TIME } from './config.js';
-import { randomRange } from './utils.js';
-import { elements } from './ui.js';
+import { NUM_RUNNERS, RUNNER_RADIUS, BASE_SPEED, NPC_MIN_PAUSE_TIME, NPC_MAX_PAUSE_TIME, NPC_MIN_RUN_TIME, NPC_MAX_RUN_TIME } from './config';
+import { randomRange } from './utils';
+import { elements } from './ui';
 
-const loadedSprites = [];
+interface SpriteData {
+    ready: boolean;
+    canvas: HTMLCanvasElement;
+}
+
+const loadedSprites: SpriteData[] = [];
 
 for (let i = 0; i < 6; i++) {
     const img = new Image();
-    img.src = `src/assets/runner_${i}.png`;
+    img.src = `/src/assets/runner_${i}.png`;
     
     const offscreenCanvas = document.createElement('canvas');
     loadedSprites.push({ ready: false, canvas: offscreenCanvas });
@@ -15,6 +20,8 @@ for (let i = 0; i < 6; i++) {
         offscreenCanvas.width = img.width;
         offscreenCanvas.height = img.height;
         const ctx = offscreenCanvas.getContext('2d');
+        if (!ctx) return;
+
         ctx.drawImage(img, 0, 0);
         
         const imgData = ctx.getImageData(0, 0, img.width, img.height);
@@ -35,8 +42,25 @@ for (let i = 0; i < 6; i++) {
         loadedSprites[i].ready = true;
     };
 }
+
 export class Runner {
-    constructor(lane, isLocal, isRemote, uid, xStart = 50, name = "PNJ") {
+    lane: number;
+    isLocal: boolean;
+    isRemote: boolean;
+    isNPC: boolean;
+    uid: string | null;
+    name: string;
+    
+    x: number;
+    speed: number;
+    
+    isMoving: boolean;
+    isSprinting: boolean;
+    isDead: boolean;
+    stateTimer: number;
+    spriteIndex: number;
+
+    constructor(lane: number, isLocal: boolean, isRemote: boolean, uid: string | null, xStart: number = 50, name: string = "PNJ") {
         this.lane = lane;
         this.isLocal = isLocal;
         this.isRemote = isRemote;
@@ -54,15 +78,14 @@ export class Runner {
         this.spriteIndex = this.lane % 6;
     }
 
-    get y() {
+    get y(): number {
         const laneSpacing = 30;
         const totalHeight = NUM_RUNNERS * laneSpacing;
-        // On décale de 40px vers le bas pour ne pas toucher l'interface des munitions en haut
         const startY = ((elements.canvas.height - totalHeight) / 2) + 40;
         return startY + (this.lane * laneSpacing);
     }
 
-    fixedUpdate(dt) {
+    fixedUpdate(dt: number) {
         if (this.isDead) return;
 
         if (this.isNPC) {
@@ -86,14 +109,13 @@ export class Runner {
         }
     }
 
-    draw(ctx) {
+    draw(ctx: CanvasRenderingContext2D) {
         const sprite = loadedSprites[this.spriteIndex];
         const size = RUNNER_RADIUS * 3.5; 
         
         let drawY = this.y;
         if (this.isMoving && !this.isDead) {
             const time = performance.now() / 100;
-            // Rebondit plus vite si le coureur sprinte
             const bounceSpeed = this.isSprinting ? 2.0 : 1.0;
             drawY += Math.sin(time * bounceSpeed + this.lane) * 3;
         }
@@ -104,7 +126,6 @@ export class Runner {
                 ctx.globalAlpha = 0.3;
             }
             
-            // Effet de traînée (Ghost Trail) si le joueur sprinte
             if (this.isSprinting && this.isMoving && !this.isDead) {
                 ctx.save();
                 ctx.globalAlpha = 0.4;
