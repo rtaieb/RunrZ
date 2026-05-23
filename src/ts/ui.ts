@@ -1,5 +1,7 @@
 import { state } from './state';
 import type { GameState, ShootEvent } from './types';
+// @ts-ignore
+import crosshairUrl from '../assets/crosshair.svg';
 
 // Add copyRoomCode to Window interface
 declare global {
@@ -72,7 +74,7 @@ export function showScreen(screenName: GameState | null) {
             elements.hud.classList.remove('hidden');
             elements.spectatorBanner.classList.add('hidden');
             if (elements.btnSprintMobile) elements.btnSprintMobile.classList.remove('hidden');
-            elements.canvas.style.cursor = "url('/src/assets/crosshair.svg') 16 16, crosshair";
+            elements.canvas.style.cursor = `url('${crosshairUrl}') 16 16, crosshair`;
         }
     } else {
         if (elements.sidebar) elements.sidebar.classList.add('sidebar-hidden');

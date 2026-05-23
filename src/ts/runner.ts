@@ -2,6 +2,21 @@ import { NUM_RUNNERS, RUNNER_RADIUS, BASE_SPEED, NPC_MIN_PAUSE_TIME, NPC_MAX_PAU
 import { randomRange } from './utils';
 import { elements } from './ui';
 
+// @ts-ignore
+import runner0 from '../assets/runner_0.png';
+// @ts-ignore
+import runner1 from '../assets/runner_1.png';
+// @ts-ignore
+import runner2 from '../assets/runner_2.png';
+// @ts-ignore
+import runner3 from '../assets/runner_3.png';
+// @ts-ignore
+import runner4 from '../assets/runner_4.png';
+// @ts-ignore
+import runner5 from '../assets/runner_5.png';
+
+const spriteUrls = [runner0, runner1, runner2, runner3, runner4, runner5];
+
 interface SpriteData {
     ready: boolean;
     canvas: HTMLCanvasElement;
@@ -11,7 +26,7 @@ const loadedSprites: SpriteData[] = [];
 
 for (let i = 0; i < 6; i++) {
     const img = new Image();
-    img.src = `/src/assets/runner_${i}.png`;
+    img.src = spriteUrls[i];
     
     const offscreenCanvas = document.createElement('canvas');
     loadedSprites.push({ ready: false, canvas: offscreenCanvas });

@@ -2,6 +2,8 @@ import { updateDoc, arrayUnion } from "firebase/firestore";
 import { NUM_RUNNERS, RUNNER_RADIUS, FINISH_LINE_OFFSET, TIME_STEP } from './config';
 import { state } from './state';
 import { elements, showScreen } from './ui';
+// @ts-ignore
+import crosshairUrl from '../assets/crosshair.svg';
 import { Runner } from './runner';
 import type { RoomData } from './types';
 
@@ -42,7 +44,7 @@ export function startGame(roomData: RoomData) {
     elements.ammoCount.className = "text-red-400 font-extrabold text-2xl ml-1";
     
     if (!state.isSpectator) {
-        elements.canvas.style.cursor = `url('/src/assets/crosshair.svg') 16 16, crosshair`;
+        elements.canvas.style.cursor = `url('${crosshairUrl}') 16 16, crosshair`;
     } else {
         elements.canvas.style.cursor = 'default';
     }
