@@ -11,6 +11,15 @@ export interface PlayerData {
     isSprinting?: boolean;
 }
 
+export interface ShootEvent {
+    id: string;
+    shooterUid: string;
+    shooterName: string;
+    targetType: 'human' | 'npc' | 'miss';
+    targetName: string;
+    timestamp: number;
+}
+
 export interface RoomData {
     status: GameState | 'waiting';
     host: string;
@@ -20,7 +29,9 @@ export interface RoomData {
     startTime?: number;
     deadRunners?: Record<string, number | boolean>;
     winnerUid?: string;
+    shootEvents?: ShootEvent[];
 }
+
 
 export interface RunnerState {
     uid: string | null;

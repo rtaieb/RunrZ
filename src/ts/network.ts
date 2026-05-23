@@ -4,8 +4,11 @@ import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, onSn
 
 import { appId, firebaseConfig, MAX_HUMANS, NUM_RUNNERS } from './config';
 import { state } from './state';
-import { elements, showScreen, showError } from './ui';
+import { elements, showScreen, showError, addShootNotification } from './ui';
 import { generateRoomCode } from './utils';
+
+const seenShootEvents = new Set<string>();
+
 import { startGame, updateRemotePlayers, handleGameOver, setLocalMovement } from './game';
 import type { RoomData } from './types';
 
@@ -254,6 +257,7 @@ export function listenToRoom(roomId: string) {
         } 
         else if (data.status === 'playing') {
             if (state.gameState !== 'playing') {
+                seenShootEvents.clear();
                 startGame(data);
             } else {
                 updateRemotePlayers(data);
@@ -266,6 +270,16 @@ export function listenToRoom(roomId: string) {
                         runner.isDead = true;
                         runner.isMoving = false;
                         if (runner.isLocal) setLocalMovement(false);
+                    }
+                }
+            }
+
+            if (data.shootEvents) {
+                const sortedEvents = [...data.shootEvents].sort((a, b) => a.timestamp - b.timestamp);
+                for (const event of sortedEvents) {
+                    if (!seenShootEvents.has(event.id)) {
+                        seenShootEvents.add(event.id);
+                        addShootNotification(event);
                     }
                 }
             }
@@ -299,7 +313,8 @@ export async function restartGame() {
             status: 'playing',
             seed: Math.floor(Math.random() * 1000000), 
             startTime: Date.now(),
-            deadRunners: {}
+            deadRunners: {},
+            shootEvents: []
         };
         if (data && data.players) {
             for (const uid of Object.keys(data.players)) {

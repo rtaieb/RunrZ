@@ -1,4 +1,4 @@
-import { updateDoc } from "firebase/firestore";
+import { updateDoc, arrayUnion } from "firebase/firestore";
 import { NUM_RUNNERS, RUNNER_RADIUS, FINISH_LINE_OFFSET, TIME_STEP } from './config';
 import { state } from './state';
 import { elements, showScreen } from './ui';
@@ -254,11 +254,39 @@ export function attemptShoot(clientX: number, clientY: number): boolean {
         }
     }
 
+    let targetType: 'human' | 'npc' | 'miss' = 'miss';
+    let targetName = '';
+
     if (hitRunner) {
-        updateDoc(state.currentRoomRef, {
-            [`deadRunners.${hitRunner.lane}`]: Date.now()
-        }).catch(console.error);
+        if (hitRunner.isNPC) {
+            targetType = 'npc';
+            targetName = hitRunner.name;
+        } else {
+            targetType = 'human';
+            targetName = hitRunner.name;
+        }
     }
+
+    const eventId = `${Date.now()}_${state.currentUser?.uid || 'unknown'}`;
+    const newEvent = {
+        id: eventId,
+        shooterUid: state.currentUser?.uid || 'unknown',
+        shooterName: localRunner?.name || 'Inconnu',
+        targetType,
+        targetName,
+        timestamp: Date.now()
+    };
+
+    const updates: any = {
+        shootEvents: arrayUnion(newEvent)
+    };
+
+    if (hitRunner) {
+        updates[`deadRunners.${hitRunner.lane}`] = Date.now();
+    }
+
+    updateDoc(state.currentRoomRef, updates).catch(console.error);
     
     return true;
 }
+

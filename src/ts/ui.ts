@@ -1,5 +1,5 @@
 import { state } from './state';
-import type { GameState } from './types';
+import type { GameState, ShootEvent } from './types';
 
 // Add copyRoomCode to Window interface
 declare global {
@@ -140,4 +140,62 @@ function showToast(message: string) {
 }
 
 window.copyRoomCode = copyRoomCode;
+
+export function addShootNotification(event: ShootEvent) {
+    const feedContainer = document.getElementById('kill-feed');
+    if (!feedContainer) return;
+
+    const notification = document.createElement('div');
+    notification.className = "flex items-center justify-between bg-slate-950/85 backdrop-blur-md text-white font-mono px-3 py-2 rounded shadow-lg animate-slide-in pointer-events-none select-none border border-transparent";
+
+    let content = "";
+    if (event.targetType === 'human') {
+        notification.classList.add('border-cyan-500/40', 'shadow-[0_0_10px_rgba(6,182,212,0.15)]');
+        content = `
+            <span class="font-extrabold text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]">${event.shooterName}</span>
+            <span class="text-gray-400 mx-2 flex items-center gap-1">💀🔫</span>
+            <span class="font-extrabold text-pink-500 drop-shadow-[0_0_5px_rgba(236,72,153,0.5)]">${event.targetName}</span>
+        `;
+    } else if (event.targetType === 'npc') {
+        notification.classList.add('border-amber-500/30', 'shadow-[0_0_10px_rgba(245,158,11,0.1)]');
+        content = `
+            <span class="font-extrabold text-amber-400">${event.shooterName}</span>
+            <span class="text-gray-400 mx-2 flex items-center gap-1">🤖🔫</span>
+            <span class="font-bold text-gray-400">${event.targetName}</span>
+        `;
+    } else {
+        notification.classList.add('border-purple-500/20', 'opacity-90');
+        content = `
+            <span class="font-extrabold text-purple-400">${event.shooterName}</span>
+            <span class="text-gray-400 mx-2 flex items-center gap-1">💨🔫</span>
+            <span class="text-gray-500 font-bold"></span>
+        `;
+    }
+
+    notification.innerHTML = content;
+    feedContainer.appendChild(notification);
+
+    if (feedContainer.children.length > 5) {
+        const oldest = feedContainer.children[0] as HTMLElement;
+        if (!oldest.classList.contains('animate-fade-out')) {
+            removeNotification(oldest);
+        }
+    }
+
+    setTimeout(() => {
+        removeNotification(notification);
+    }, 4000);
+}
+
+function removeNotification(element: HTMLElement) {
+    if (element.parentNode) {
+        element.classList.remove('animate-slide-in');
+        element.classList.add('animate-fade-out');
+        setTimeout(() => {
+            if (element.parentNode) {
+                element.parentNode.removeChild(element);
+            }
+        }, 500);
+    }
+}
 
