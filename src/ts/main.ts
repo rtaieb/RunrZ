@@ -1,12 +1,14 @@
 import { state } from './state';
 import { elements, showScreen, showError } from './ui';
-import { joinPublicRoom, createRoom, joinRoom, hostStartGame, restartGame, updateLocalCursor } from './network';
+import { joinPublicRoom, createRoom, joinRoom, hostStartGame, restartGame, updateLocalCursor, getPlayerName } from './network';
 import { setLocalMovement, setLocalSprinting, attemptShoot, draw } from './game';
 import { RUNNER_RADIUS } from './config';
 
 const savedName = localStorage.getItem('runrz_player_name');
 if (savedName) {
     elements.inputPlayerName.value = savedName;
+} else {
+    getPlayerName();
 }
 
 const urlParams = new URLSearchParams(window.location.search);

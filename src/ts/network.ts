@@ -6,6 +6,7 @@ import { appId, firebaseConfig, MAX_HUMANS, NUM_RUNNERS } from './config';
 import { state } from './state';
 import { elements, showScreen, showError, addShootNotification } from './ui';
 import { generateRoomCode } from './utils';
+import { RETRO_NAMES } from './names';
 
 const seenShootEvents = new Set<string>();
 
@@ -25,7 +26,11 @@ export function getPlayerName(): string {
         localStorage.setItem('runrz_player_name', val);
         return val;
     }
-    return "Coureur " + Math.floor(Math.random() * 10000);
+    
+    const randomName = RETRO_NAMES[Math.floor(Math.random() * RETRO_NAMES.length)];
+    elements.inputPlayerName.value = randomName;
+    localStorage.setItem('runrz_player_name', randomName);
+    return randomName;
 }
 
 export const initAuth = async () => {
