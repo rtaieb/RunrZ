@@ -22,6 +22,8 @@ export const elements = {
     authLoading: document.getElementById('auth-loading') as HTMLElement,
     startActions: document.getElementById('start-actions') as HTMLElement,
     inputPlayerName: document.getElementById('input-player-name') as HTMLInputElement,
+    btnRandomName: document.getElementById('btn-random-name') as HTMLButtonElement,
+    btnClearName: document.getElementById('btn-clear-name') as HTMLButtonElement,
     btnPublic: document.getElementById('btn-public') as HTMLButtonElement,
     btnCreate: document.getElementById('btn-create') as HTMLButtonElement,
     btnJoin: document.getElementById('btn-join') as HTMLButtonElement,

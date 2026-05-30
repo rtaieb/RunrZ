@@ -1,6 +1,7 @@
 import { state } from './state';
 import { elements, showScreen, showError } from './ui';
 import { joinPublicRoom, createRoom, joinRoom, hostStartGame, restartGame, updateLocalCursor, getPlayerName } from './network';
+import { RETRO_NAMES } from './names';
 import { setLocalMovement, setLocalSprinting, attemptShoot, draw } from './game';
 import { RUNNER_RADIUS } from './config';
 
@@ -146,6 +147,16 @@ if (elements.btnSprintMobile) {
 }
 
 // --- EVENEMENTS DES BOUTONS ---
+elements.btnRandomName.addEventListener('click', () => {
+    const randomName = RETRO_NAMES[Math.floor(Math.random() * RETRO_NAMES.length)];
+    elements.inputPlayerName.value = randomName;
+});
+
+elements.btnClearName.addEventListener('click', () => {
+    elements.inputPlayerName.value = "";
+    elements.inputPlayerName.focus();
+});
+
 elements.btnPublic.addEventListener('click', joinPublicRoom);
 elements.btnCreate.addEventListener('click', createRoom);
 elements.btnJoin.addEventListener('click', joinRoom);

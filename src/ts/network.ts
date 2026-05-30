@@ -23,13 +23,11 @@ export const db = getFirestore(app);
 export function getPlayerName(): string {
     const val = elements.inputPlayerName.value.trim();
     if (val) {
-        localStorage.setItem('runrz_player_name', val);
         return val;
     }
     
     const randomName = RETRO_NAMES[Math.floor(Math.random() * RETRO_NAMES.length)];
     elements.inputPlayerName.value = randomName;
-    localStorage.setItem('runrz_player_name', randomName);
     return randomName;
 }
 
@@ -76,6 +74,7 @@ export async function joinPublicRoom() {
         });
 
         const pName = getPlayerName();
+        localStorage.setItem('runrz_player_name', pName);
 
         if (targetRoomId && targetRoomData) {
             const trData = targetRoomData as RoomData;
@@ -118,6 +117,7 @@ export async function createRoom() {
 
     try {
         const pName = getPlayerName();
+        localStorage.setItem('runrz_player_name', pName);
         const roomCode = generateRoomCode();
         const newRoomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode);
         
@@ -172,6 +172,7 @@ export async function joinRoom() {
         }
 
         const pName = getPlayerName();
+        localStorage.setItem('runrz_player_name', pName);
         const usedLanes = Object.values(data.players).map(p => p.lane);
         let myLane = 0;
         while(usedLanes.includes(myLane)) myLane++; 

@@ -22,7 +22,11 @@
         <div id="auth-loading" class="text-gray-400 text-xl animate-pulse">Connexion au serveur...</div>
         
         <div id="start-actions" class="hidden flex flex-col items-center gap-4 w-full max-w-sm">
-            <input type="text" id="input-player-name" maxlength="15" placeholder="Votre pseudo (facultatif)" class="w-full p-3 rounded-lg bg-gray-800 text-white text-center font-bold border border-gray-600 focus:border-blue-500 focus:outline-none mb-2">
+            <div class="flex w-full gap-2 mb-2">
+                <input type="text" id="input-player-name" maxlength="15" placeholder="Votre pseudo (facultatif)" class="flex-grow p-3 rounded-lg bg-gray-800 text-white text-center font-bold border border-gray-600 focus:border-blue-500 focus:outline-none">
+                <button id="btn-random-name" class="p-3 rounded-lg bg-gray-800 text-white text-xl border border-gray-600 hover:bg-gray-700 transition-colors focus:border-blue-500 focus:outline-none flex-shrink-0" title="Pseudo aléatoire">🎲</button>
+                <button id="btn-clear-name" class="p-3 rounded-lg bg-gray-800 text-white text-xl border border-gray-600 hover:bg-gray-700 transition-colors focus:border-blue-500 focus:outline-none flex-shrink-0" title="Effacer le pseudo">❌</button>
+            </div>
             
             <button id="btn-public" class="hidden btn w-full bg-green-600 hover:bg-green-700">Rejoindre un salon public</button>
             
